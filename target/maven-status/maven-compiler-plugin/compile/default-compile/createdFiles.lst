@@ -1,4 +1,5 @@
 com\artwork\controller\RazorpayController.class
+com\artwork\config\WebConfig.class
 com\artwork\dao\ArtworkDao$1.class
 com\artwork\dao\UserDao$1.class
 com\artwork\controller\PurchaseController.class

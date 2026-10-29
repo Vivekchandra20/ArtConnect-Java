@@ -1,265 +1,163 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Artwork Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --nav-bg: rgba(30, 41, 59, 0.8);
-            --text-color: #f8fafc;
-            --primary-accent: #3b82f6;
-            --primary-hover: #2563eb;
-            --card-bg: rgba(30, 41, 59, 0.5);
-        }
-        body { margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: var(--bg-color); color: var(--text-color); }
-        nav { background: var(--nav-bg); backdrop-filter: blur(10px); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); position: sticky; top: 0; z-index: 100;}
-        .logo { font-size: 1.5rem; font-weight: 600; color: white; text-decoration: none; }
-        .nav-links a { color: #cbd5e1; text-decoration: none; margin-left: 1.5rem; transition: color 0.3s; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid transparent;}
-        .nav-links a:hover { color: white; border: 1px solid rgba(255,255,255,0.2); }
-        .container { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
-        
-        /* Seller Form styles */
-        .upload-card { background: var(--card-bg); padding: 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 3rem; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #cbd5e1; }
-        .form-group input, .form-group textarea { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(15,23,42,0.6); color: var(--text-color); box-sizing: border-box; outline: none; transition: border 0.3s; }
-        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary-accent); }
-        .submit-btn { padding: 0.75rem 2rem; border-radius: 8px; border: none; background: var(--primary-accent); color: white; font-weight: 600; cursor: pointer; transition: background 0.3s; }
-        .submit-btn:hover { background: var(--primary-hover); }
-        
-        /* Buyer Gallery styles */
-        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
-        .art-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column;}
-        .art-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .art-image-wrapper { width: 100%; height: 250px; overflow: hidden; }
-        .art-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
-        .art-card:hover .art-image { transform: scale(1.1); }
-        .art-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column;}
-        .art-title { margin: 0 0 0.5rem 0; font-size: 1.2rem; font-weight: 600; }
-        .art-desc { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; flex-grow: 1;}
-        .art-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto;}
-        .art-price { font-weight: 600; color: var(--primary-accent); font-size: 1.2rem; }
-        .buy-btn { padding: 0.5rem 1rem; border-radius: 6px; background: transparent; border: 1px solid var(--primary-accent); color: white; cursor: pointer; transition: all 0.3s; }
-        .buy-btn:hover { background: var(--primary-accent); }
-        .success-msg { color: #10b981; margin-bottom: 1rem; padding: 1rem; background: rgba(16,185,129,0.1); border-radius: 8px;}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArtConnect — Discover Original Art</title>
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <nav>
-        <a href="/dashboard" class="logo">ArtConnect</a>
-        <div class="nav-links">
-            <c:choose>
-                <c:when test="${not empty user}">
-                    <span>Welcome, ${user.name}</span>
-                    <a href="/logout">Logout</a>
-                </c:when>
-                <c:otherwise>
-                    <a href="/login">Login</a>
-                    <a href="/register" style="background: var(--primary-accent); color: white;">Register</a>
-                </c:otherwise>
-            </c:choose>
-        </div>
-    </nav>
 
-    <div class="container">
-        
-        <c:if test="${not empty param.success}">
-            <div class="success-msg">${param.success}</div>
-        </c:if>
+  <%@ include file="/WEB-INF/jsp/fragments/nav.jsp" %>
 
-        <c:choose>
-            <c:when test="${user.role == 'SELLER'}">
-                <div class="upload-card">
-                    <h2>Upload New Artwork</h2>
-                    <form action="/artwork/upload" method="POST">
-                        <div class="form-group">
-                            <label>Title</label>
-                            <input type="text" name="title" required placeholder="e.g. Starry Night">
-                        </div>
-                        <div class="form-group">
-                            <label>Description</label>
-                            <textarea name="description" rows="3" required placeholder="Tell us about your art..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Price ($)</label>
-                            <input type="number" step="0.01" name="price" required placeholder="99.99">
-                        </div>
-                        <div class="form-group">
-                            <label>Image URL</label>
-                            <input type="url" name="imageUrl" required placeholder="https://example.com/image.jpg">
-                        </div>
-                        <button type="submit" class="submit-btn">Upload Artwork</button>
-                    </form>
-                </div>
-
-                <h2>Your Uploaded Artworks</h2>
-                <div class="gallery">
-                    <c:forEach items="${artworks}" var="art">
-                        <div class="art-card">
-                            <div class="art-image-wrapper">
-                                <img src="${art.imageUrl}" alt="${art.title}" class="art-image" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                            </div>
-                            <div class="art-info">
-                                <h3 class="art-title">${art.title}</h3>
-                                <p class="art-desc">${art.description}</p>
-                                <div class="art-footer">
-                                    <span class="art-price">$${art.price}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </c:forEach>
-                    <c:if test="${empty artworks}">
-                        <p style="color: #94a3b8;">You haven't uploaded any artworks yet.</p>
-                    </c:if>
-                </div>
-                
-                <h2 style="margin-top: 4rem;">Reviews on Your Artworks</h2>
-                <div class="gallery">
-                    <c:forEach items="${sellerReviews}" var="review">
-                        <div class="art-card" style="padding: 1.5rem; display: block;">
-                            <h3 style="margin-top: 0; color: var(--primary-accent);">${review.artworkTitle}</h3>
-                            <div style="color: #fbbf24; margin-bottom: 0.5rem;">
-                                <c:forEach begin="1" end="${review.rating}">★</c:forEach><c:forEach begin="${review.rating + 1}" end="5">☆</c:forEach>
-                            </div>
-                            <p style="font-size: 0.9rem; margin-bottom: 1rem;">"${review.comment}"</p>
-                            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">By ${review.buyerEmail} on ${review.createdAt}</p>
-                        </div>
-                    </c:forEach>
-                    <c:if test="${empty sellerReviews}">
-                        <p style="color: #94a3b8;">No reviews yet.</p>
-                    </c:if>
-                </div>
-            </c:when>
-            
-            <c:otherwise>
-                <!-- Buyer View -->
-                <h1 style="margin-bottom: 2rem;">Discover Amazing Artworks</h1>
-                <div class="gallery">
-                    <c:forEach items="${artworks}" var="art">
-                        <div class="art-card">
-                            <div class="art-image-wrapper">
-                                <img src="${art.imageUrl}" alt="${art.title}" class="art-image" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                            </div>
-                            <div class="art-info">
-                                <h3 class="art-title">${art.title}</h3>
-                                <p class="art-desc">${art.description}</p>
-                                <div class="art-footer">
-                                    <span class="art-price">$${art.price}</span>
-                                    <c:choose>
-                                        <c:when test="${not empty user}">
-                                            <button class="buy-btn" onclick="startCheckout(${art.id})">Purchase</button>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <a href="/login" class="buy-btn" style="text-decoration: none; display: inline-block;">Login to Purchase</a>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
-                        </div>
-                    </c:forEach>
-                    <c:if test="${empty artworks}">
-                        <p style="color: #94a3b8;">No artworks available at the moment. Please check back later!</p>
-                    </c:if>
-                </div>
-
-                <c:if test="${not empty user}">
-                <h2 style="margin-top: 4rem; margin-bottom: 2rem;">My Collection</h2>
-                <div class="gallery">
-                    <c:forEach items="${myPurchases}" var="purchase">
-                        <div class="art-card">
-                            <div class="art-image-wrapper">
-                                <img src="${purchase.artwork.imageUrl}" alt="${purchase.artwork.title}" class="art-image" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                            </div>
-                            <div class="art-info">
-                                <h3 class="art-title">${purchase.artwork.title}</h3>
-                                <p style="font-size: 0.8rem; color: #10b981;">Purchased on ${purchase.purchaseDate}</p>
-                                
-                                <form action="/artwork/review" method="POST" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                                    <input type="hidden" name="artworkId" value="${purchase.artwork.id}">
-                                    <div class="form-group" style="margin-bottom: 0.5rem;">
-                                        <label>Rating (1-5)</label>
-                                        <input type="number" name="rating" min="1" max="5" required style="padding: 0.5rem; width: 100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(15,23,42,0.6); color: white;">
-                                    </div>
-                                    <div class="form-group" style="margin-bottom: 0.5rem;">
-                                        <label>Comment</label>
-                                        <textarea name="comment" rows="2" required style="padding: 0.5rem; width: 100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(15,23,42,0.6); color: white;"></textarea>
-                                    </div>
-                                    <button type="submit" class="buy-btn" style="width: 100%;">Leave Review</button>
-                                </form>
-                            </div>
-                        </div>
-                    </c:forEach>
-                    <c:if test="${empty myPurchases}">
-                        <p style="color: #94a3b8;">You haven't purchased any artworks yet.</p>
-                    </c:if>
-                </div>
-                </c:if>
-            </c:otherwise>
-        </c:choose>
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="hero__bg"></div>
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+      <p class="hero__eyebrow">— The Art Marketplace</p>
+      <h1 class="hero__title">Discover Art That<br>Moves You.</h1>
+      <p class="hero__sub">A curated platform connecting passionate collectors with independent artists and their original works.</p>
+      <div class="hero__actions">
+        <a href="#gallery" class="btn btn-gold btn-lg">Explore Gallery</a>
+        <a href="/register" class="btn btn-lg" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.3);">
+          Sell Your Art
+        </a>
+      </div>
     </div>
+  </section>
 
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script>
-        function startCheckout(artworkId) {
-            fetch('/api/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ artworkId: artworkId })
-            })
-            .then(response => response.json())
-            .then(order => {
-                if (order.error) {
-                    alert('Error creating order: ' + order.error);
-                    return;
-                }
+  <!-- ===================== STRIP ===================== -->
+  <div class="featured-strip">
+    <div class="featured-strip__inner">
+      <div class="featured-strip__item"><span>✦</span><span>Original artworks only</span></div>
+      <div class="featured-strip__item"><span>✦</span><span>Secure Razorpay payments</span></div>
+      <div class="featured-strip__item"><span>✦</span><span>Direct from the artist</span></div>
+      <div class="featured-strip__item"><span>✦</span><span>Verified sellers</span></div>
+      <div class="featured-strip__item"><span>✦</span><span>Every piece unique</span></div>
+    </div>
+  </div>
 
-                var options = {
-                    "key": order.key_id, 
-                    "amount": order.amount,
-                    "currency": order.currency,
-                    "name": "ArtConnect",
-                    "description": "Artwork Purchase",
-                    "order_id": order.order_id,
-                    "handler": function (response) {
-                        fetch('/api/verify-payment', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_signature: response.razorpay_signature,
-                                artworkId: artworkId
-                            })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                window.location.href = '/dashboard?success=Payment Successful!';
-                            } else {
-                                alert('Payment verification failed: ' + data.error);
-                            }
-                        });
-                    },
-                    "theme": {
-                        "color": "#3b82f6"
-                    }
-                };
-                var rzp1 = new Razorpay(options);
-                rzp1.on('payment.failed', function (response){
-                    alert('Payment failed: ' + response.error.description);
-                });
-                rzp1.open();
+  <!-- ===================== GALLERY ===================== -->
+  <section class="section" id="gallery">
+    <div class="container">
+
+      <c:if test="${not empty param.success}">
+        <div class="alert-success" style="margin-bottom:2rem;">${param.success}</div>
+      </c:if>
+
+      <div class="section-header">
+        <h2>Available Artworks</h2>
+        <c:if test="${not empty user && user.role == 'SELLER'}">
+          <a href="/seller" class="view-all">Go to My Studio ↗</a>
+        </c:if>
+      </div>
+
+      <c:choose>
+        <c:when test="${not empty artworks}">
+          <div class="artwork-grid">
+            <c:forEach items="${artworks}" var="art">
+              <div class="artwork-card">
+                <div class="artwork-card__img-wrap">
+                  <img
+                    src="${fn:escapeXml(art.imageUrl)}"
+                    alt="${fn:escapeXml(art.title)}"
+                    class="artwork-card__img"
+                    onerror="this.src='https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=600&q=70'"
+                  >
+                  <span class="artwork-card__badge badge-new">Original</span>
+                </div>
+                <div class="artwork-card__body">
+                  <p class="artwork-card__artist">${fn:escapeXml(art.sellerEmail)}</p>
+                  <h3 class="artwork-card__title">${fn:escapeXml(art.title)}</h3>
+                  <p class="artwork-card__meta">${fn:escapeXml(art.description)}</p>
+                  <div class="artwork-card__footer">
+                    <div class="artwork-card__price">
+                      <span class="currency">₹ </span>${art.price}
+                    </div>
+                    <c:choose>
+                      <c:when test="${not empty user && user.role == 'BUYER'}">
+                        <button class="btn btn-sm btn-primary" onclick="startCheckout(${art.id})">Buy Now</button>
+                      </c:when>
+                      <c:when test="${empty user}">
+                        <a href="/login" class="btn btn-sm btn-outline">Login to Buy</a>
+                      </c:when>
+                    </c:choose>
+                  </div>
+                </div>
+              </div>
+            </c:forEach>
+          </div>
+        </c:when>
+        <c:otherwise>
+          <div class="empty-state">
+            <div class="empty-state__icon">🖼</div>
+            <h3>No artworks yet</h3>
+            <p>Be the first artist to list a piece. <a href="/register" style="border-bottom:1px solid currentColor;">Join as a Seller.</a></p>
+          </div>
+        </c:otherwise>
+      </c:choose>
+    </div>
+  </section>
+
+  <!-- ===================== CTA BANNER ===================== -->
+  <section style="background:var(--nav);padding:5rem 0;">
+    <div class="container" style="text-align:center;color:#fff;">
+      <p style="font-size:0.75rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;">For Artists</p>
+      <h2 style="font-family:var(--serif);font-size:clamp(1.8rem,4vw,3rem);color:#fff;margin-bottom:1rem;">Share Your Work With the World</h2>
+      <p style="color:rgba(255,255,255,0.65);max-width:480px;margin:0 auto 2.5rem;line-height:1.75;">List your original artworks, reach passionate collectors, and receive secure payments directly.</p>
+      <a href="/register" class="btn btn-gold btn-lg">Start Selling Today</a>
+    </div>
+  </section>
+
+  <%@ include file="/WEB-INF/jsp/fragments/footer.jsp" %>
+
+  <!-- Razorpay -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    function startCheckout(artworkId) {
+      fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ artworkId: artworkId })
+      })
+      .then(r => r.json())
+      .then(order => {
+        if (order.error) { alert('Error: ' + order.error); return; }
+        var rzp = new Razorpay({
+          key: order.key_id,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'ArtConnect',
+          description: 'Artwork Purchase',
+          order_id: order.order_id,
+          handler: function(response) {
+            fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_signature:  response.razorpay_signature,
+                artworkId: artworkId
+              })
             })
-            .catch(err => {
-                console.error('Error:', err);
-                alert('Something went wrong!');
+            .then(r => r.json())
+            .then(data => {
+              if (data.status === 'success') window.location.href = '/buyer?success=Payment+successful!';
+              else alert('Payment verification failed.');
             });
-        }
-    </script>
+          },
+          theme: { color: '#b8962e' }
+        });
+        rzp.on('payment.failed', function(r) { alert('Payment failed: ' + r.error.description); });
+        rzp.open();
+      })
+      .catch(() => alert('Something went wrong.'));
+    }
+  </script>
 </body>
 </html>

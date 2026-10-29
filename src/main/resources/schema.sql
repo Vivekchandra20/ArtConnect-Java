@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS artworks (
     price DECIMAL(10, 2) NOT NULL,
     image_url VARCHAR(1024),
     seller_email VARCHAR(255),
+    listing_type VARCHAR(20) NOT NULL DEFAULT 'FIXED_PRICE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (seller_email) REFERENCES users(email)
 );
